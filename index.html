@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Продуктовая компания - Моделирование</title>
+    <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<h2>📊 Моделирование продуктовой компании</h2>
+<div class="container">
+    <div class="left-panel">
+        <h3>📈 Начальные значения</h3>
+        <div id="initial-values"></div>
+        
+        <h3>📉 Ограничения</h3>
+        <div id="limits"></div>
+        
+        <div class="note">
+            <strong>Примечание:</strong> Все значения в диапазоне [0, 1]
+        </div>
+    </div>
+    
+    <div class="right-panel">
+        <h3>🔧 Коэффициенты полиномов f(x) = a + b·x + c·x² + d·x³</h3>
+        <div class="scrollable" id="polynomials"></div>
+        
+        <h3>⚡ Возмущения q(x) = a + b·x + c·x² + d·x³</h3>
+        <div class="scrollable" id="perturbations"></div>
+        
+    </div>
+
+    <div class="button-group">
+        <button id="runBtn">▶ Запустить моделирование</button>
+        <button id="polarBtn">🎯 Полярная диаграмма</button>
+        <button id="randomBtn" class="random-btn">🎲 Случайные значения</button>
+        <button id="resetBtn">⟳ Сброс</button>
+    </div>
+</div>
+
+<div class="graph-container" id="graphContainer">
+    <canvas id="graphCanvas" width="900" height="450"></canvas>
+</div>
+<div class="graph-container" id="polarContainer" style="display:none;">
+    <canvas id="polarCanvas" width="500" height="500"></canvas>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>

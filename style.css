@@ -1,0 +1,125 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+    background-color: #f0f0f0;
+}
+
+.container {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.left-panel {
+    width: 380px;
+    background: white;
+    padding: 15px;
+    border-radius: 8px;
+    height: 600px;
+    overflow-y: auto;
+}
+
+.right-panel {
+    width: 700px;
+    background: white;
+    padding: 15px;
+    border-radius: 8px;
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+.param-row {
+    margin: 5px 0;
+    padding: 5px;
+    border-bottom: 1px solid #ddd;
+}
+
+.param-row span {
+    display: inline-block;
+    width: 230px;
+    font-size: 13px;
+}
+
+input {
+    width: 65px;
+    padding: 3px;
+    font-size: 12px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+}
+
+button {
+    background-color: #4CAF50;
+    color: white;
+    padding: 8px 16px;
+    margin: 5px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+button:hover {
+    background-color: #45a049;
+}
+
+.random-btn {
+    background-color: #ff9800;
+}
+
+.random-btn:hover {
+    background-color: #f57c00;
+}
+
+.graph-container {
+    margin-top: 20px;
+    background: white;
+    padding: 15px;
+    border-radius: 8px;
+    text-align: center;
+}
+
+canvas {
+    border: 1px solid #ddd;
+    background: white;
+    max-width: 100%;
+    height: auto;
+}
+
+h3 {
+    margin-top: 0;
+    color: #333;
+    font-size: 16px;
+}
+
+.note {
+    font-size: 11px;
+    color: #666;
+    margin-top: 10px;
+}
+
+.button-group {
+    margin-top: 15px;
+    text-align: center;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+}
+
+.scrollable {
+    max-height: 350px;
+    overflow-y: auto;
+    margin-bottom: 15px;
+}
+
+.poly-row {
+    font-size: 12px;
+    padding: 5px;
+    border-bottom: 1px solid #eee;
+}
+
+.poly-row b {
+    display: inline-block;
+    width: 70px;
+}
