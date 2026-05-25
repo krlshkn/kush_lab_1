@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ДТП - Моделирование</title>
+    <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f0f0f0;
+        }
+        .main-wrapper {
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 100px);
+        }
+        .container {
+            display: flex;
+            gap: 20px;
+            flex: 1;
+            min-height: 0;
+        }
+        .left-panel {
+            width: 380px;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        .right-panel {
+            flex: 1;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        .scrollable {
+            flex: 1;
+            overflow-y: auto;
+            margin-bottom: 15px;
+            padding-right: 5px;
+        }
+        .scrollable::-webkit-scrollbar {
+            width: 8px;
+        }
+        .scrollable::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        .scrollable::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+        .param-row {
+            margin: 5px 0;
+            padding: 5px;
+            border-bottom: 1px solid #ddd;
+        }
+        .param-row span {
+            display: inline-block;
+            width: 210px;
+            font-size: 13px;
+        }
+        input {
+            width: 65px;
+            padding: 3px;
+            font-size: 12px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+        }
+        .poly-row {
+            font-size: 12px;
+            padding: 5px;
+            border-bottom: 1px solid #eee;
+        }
+        .poly-row b {
+            display: inline-block;
+            width: 70px;
+        }
+        .button-group {
+            text-align: center;
+            padding: 15px 0 0 0;
+            margin-top: 15px;
+            border-top: 1px solid #ddd;
+            background-color: #f0f0f0;
+            flex-shrink: 0;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            margin: 0 5px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .random-btn {
+            background-color: #ff9800;
+        }
+        .random-btn:hover {
+            background-color: #f57c00;
+        }
+        .graph-container {
+            margin-top: 20px;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        canvas {
+            border: 1px solid #ddd;
+            background: white;
+            max-width: 100%;
+            height: auto;
+        }
+        h3 {
+            margin-top: 0;
+            color: #333;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+        .note {
+            font-size: 11px;
+            color: #666;
+            margin-top: 10px;
+            flex-shrink: 0;
+        }
+    </style>
+</head>
+<body>
+<h2>🚗 Моделирование аварийности (ДТП)</h2>
+<div class="main-wrapper">
+    <div class="container">
+        <div class="left-panel">
+            <h3>📈 Начальные значения</h3>
+            <div class="scrollable" id="initial-values"></div>
+            <h3>📉 Ограничения</h3>
+            <div class="scrollable" id="limits"></div>
+            <div class="note"><strong>Примечание:</strong> Все значения в диапазоне [0, 1]</div>
+        </div>
+        <div class="right-panel">
+            <h3>🔧 Коэффициенты полиномов f(x) = a + b·x + c·x² + d·x³</h3>
+            <div class="scrollable" id="polynomials"></div>
+            <h3>⚡ Возмущения E(x) = a + b·x + c·x² + d·x³</h3>
+            <div class="scrollable" id="perturbations"></div>
+        </div>
+    </div>
+    <div class="button-group">
+        <button id="runBtn">▶ Запустить моделирование</button>
+        <button id="polarBtn">🎯 Полярная диаграмма</button>
+        <button id="randomBtn" class="random-btn">🎲 Случайные значения</button>
+        <button id="resetBtn">⟳ Сброс</button>
+    </div>
+</div>
+<div class="graph-container" id="graphContainer">
+    <canvas id="graphCanvas" width="900" height="450"></canvas>
+</div>
+<div class="graph-container" id="polarContainer" style="display:none;">
+    <canvas id="polarCanvas" width="500" height="500"></canvas>
+</div>
+
+<script>
+    // Названия переменных для ДТП
+    const varNames = [
+        'Общее количество ДТП в РФ',
+        'Количество погибших в ДТП',
+        'Количество раненых в ДТП',
+        'Тяжесть последствий ДТП',
+        'Погибших на 10 000 ТС',
+        'Пострадавших на 100000 жителей',
+        'ДТП из-за нарушения ПДД водителями',
+        'ДТП по вине нетрезвых водителей',
+        'ДТП по вине пешеходов',
+        'ДТП с участием детей',
+        'ДТП по вине неисправных ТС',
+        'ДТП из-за состояния дорог',
+        'ДТП с тяжкими последствиями'
+    ];
+
+    // Индексы x для 76 функций f (из исходного кода)
+    const fIndices = [
+        7,8,9,10,11,12,4,5,8,9,11,6,7,8,9,10,11,12,13,2,5,7,8,9,11,
+        2,4,7,8,11,3,7,8,9,10,11,13,1,8,13,2,5,10,1,7,9,11,12,1,10,
+        11,12,2,3,1,7,8,9,13,2,3,1,8,12,1,7,8,11,1,2,3,4,5,6,7,8
+    ];
+
+    let initialValues = [];   // 13 переменных
+    let fCoeffs = [];         // 76 функций
+    let qCoeffs = [];         // 6 возмущений
+
+    function clamp(value) {
+        return Math.min(1, Math.max(0, value));
+    }
+
+    function randomRange(min, max) {
+        return min + Math.random() * (max - min);
+    }
+
+    function generateRandomValues() {
+        for (let i = 0; i < 13; i++) {
+            let input = document.getElementById(`val_${i}`);
+            if (input) input.value = clamp(randomRange(0.2, 0.8)).toFixed(3);
+        }
+        for (let i = 0; i < 13; i++) {
+            let input = document.getElementById(`lim_${i}`);
+            if (input) input.value = clamp(randomRange(0.05, 0.3)).toFixed(3);
+        }
+        for (let i = 0; i < 76; i++) {
+            let aInput = document.getElementById(`f_a_${i}`);
+            let bInput = document.getElementById(`f_b_${i}`);
+            let cInput = document.getElementById(`f_c_${i}`);
+            let dInput = document.getElementById(`f_d_${i}`);
+            if (aInput) aInput.value = clamp(randomRange(0, 0.5)).toFixed(3);
+            if (bInput) bInput.value = clamp(randomRange(0.1, 0.5)).toFixed(3);
+            if (cInput) cInput.value = clamp(randomRange(0.1, 0.5)).toFixed(3);
+            if (dInput) dInput.value = clamp(randomRange(0.3, 1.0)).toFixed(3);
+        }
+        for (let i = 0; i < 6; i++) {
+            let aInput = document.getElementById(`q_a_${i}`);
+            let bInput = document.getElementById(`q_b_${i}`);
+            let cInput = document.getElementById(`q_c_${i}`);
+            let dInput = document.getElementById(`q_d_${i}`);
+            if (aInput) aInput.value = clamp(randomRange(0, 0.5)).toFixed(3);
+            if (bInput) bInput.value = clamp(randomRange(0.1, 0.5)).toFixed(3);
+            if (cInput) cInput.value = clamp(randomRange(0.1, 0.5)).toFixed(3);
+            if (dInput) dInput.value = clamp(randomRange(0.3, 1.0)).toFixed(3);
+        }
+    }
+
+    function collectData() {
+        for (let i = 0; i < 13; i++) {
+            let val = parseFloat(document.getElementById(`val_${i}`).value);
+            initialValues[i] = clamp(isNaN(val) ? 0.43 : val);
+        }
+        for (let i = 0; i < 76; i++) {
+            fCoeffs[i] = [
+                clamp(parseFloat(document.getElementById(`f_a_${i}`).value) || 0),
+                clamp(parseFloat(document.getElementById(`f_b_${i}`).value) || 0.27),
+                clamp(parseFloat(document.getElementById(`f_c_${i}`).value) || 0.27),
+                clamp(parseFloat(document.getElementById(`f_d_${i}`).value) || 0.81)
+            ];
+        }
+        for (let i = 0; i < 6; i++) {
+            qCoeffs[i] = [
+                clamp(parseFloat(document.getElementById(`q_a_${i}`).value) || 0),
+                clamp(parseFloat(document.getElementById(`q_b_${i}`).value) || 0.27),
+                clamp(parseFloat(document.getElementById(`q_c_${i}`).value) || 0.27),
+                clamp(parseFloat(document.getElementById(`q_d_${i}`).value) || 0.81)
+            ];
+        }
+    }
+
+    function f(i, x) {
+        let coeffs = fCoeffs[i-1];
+        let xc = clamp(x);
+        return coeffs[0] + coeffs[1] * xc + coeffs[2] * xc * xc + coeffs[3] * xc * xc * xc;
+    }
+
+    function q(i, x) {
+        let coeffs = qCoeffs[i-1];
+        let xc = clamp(x);
+        return coeffs[0] + coeffs[1] * xc + coeffs[2] * xc * xc + coeffs[3] * xc * xc * xc;
+    }
+
+    // Система для ДТП (из предоставленного кода)
+    function system(x) {
+        let dx = new Array(13);
+        dx[0] = (1 / initialValues[0]) * (f(1, x[6]) * f(2, x[7]) * f(3, x[8]) * f(4, x[9]) * f(5, x[10]) * f(6, x[11]) * (q(1, x[0]) + q(2, x[0]) + q(4, x[0]) + q(3, x[0]) + q(4, x[0]) + q(5, x[0]) + q(6, x[0])));
+        dx[1] = (1 / initialValues[1]) * (f(7, x[3]) * f(8, x[4]) * f(9, x[7]) * f(10, x[8]) * f(11, x[10]) * (q(2, x[1]) - q(3, x[1]) + q(4, x[1]) + q(5, x[1]) + q(6, x[1])));
+        dx[2] = (1 / initialValues[2]) * (f(12, x[5]) * f(13, x[6]) * f(14, x[7]) * f(15, x[8]) * f(16, x[9]) * f(17, x[10]) * f(18, x[11]) * f(19, x[12]) * (q(1, x[2]) + q(2, x[2])) - (q(4, x[2]) + q(6, x[2])));
+        dx[3] = (1 / initialValues[3]) * (f(20, x[1]) * f(21, x[4]) * f(22, x[6]) * f(23, x[7]) * f(24, x[8]) * f(25, x[10]) * q(2, x[3]) + (q(3, x[3]) + q(4, x[3]) + q(5, x[3]) + q(6, x[3])));
+        dx[4] = (1 / initialValues[4]) * (f(26, x[1]) * f(27, x[3]) * f(28, x[6]) * f(29, x[7]) * f(30, x[10]) * (q(1, x[4]) + q(2, x[4])) + (q(3, x[4]) + q(4, x[4]) + q(5, x[4]) + q(6, x[4])));
+        dx[5] = (1 / initialValues[5]) * (f(31, x[2]) * f(32, x[6]) * f(33, x[7]) * f(34, x[8]) * f(35, x[9]) * f(36, x[10]) * f(37, x[12]) - (q(3, x[5]) + q(4, x[5]) + q(6, x[5])));
+        dx[6] = (1 / initialValues[6]) * (f(38, x[0]) * f(39, x[7]) * f(40, x[12]) * (q(1, x[6]) + q(6, x[6])) + f(41, x[1]) * f(42, x[4]) * f(43, x[9]) * (q(3, x[6]) + q(4, x[6]) + q(5, x[6]) + q(6, x[6])));
+        dx[7] = (1 / initialValues[7]) * (f(44, x[0]) * f(45, x[6]) * f(46, x[8]) * f(47, x[10]) * f(48, x[11]) * (q(1, x[7]) + q(2, x[7])) - (q(4, x[7]) + q(6, x[7])));
+        dx[8] = (1 / initialValues[8]) * (f(49, x[0]) * f(50, x[9]) * f(51, x[10]) * f(52, x[11]) * q(1, x[8]) - (f(53, x[1]) * f(54, x[2])));
+        dx[9] = (1 / initialValues[9]) * (f(55, x[0]) * f(56, x[6]) * f(57, x[7]) * f(59, x[12]) * q(1, x[9]) - f(60, x[1]) * f(61, x[2]) * (q(3, x[9]) + q(4, x[9]) + q(5, x[9]) + q(6, x[9])));
+        dx[10] = (1 / initialValues[10]) * (f(62, x[0]) * f(63, x[7]) * f(64, x[11]) * q(2, x[10]) - (q(2, x[10]) + q(4, x[10]) + q(6, x[10])));
+        dx[11] = (1 / initialValues[11]) * (f(65, x[0]) * f(66, x[6]) * f(67, x[7]) * f(68, x[10]) * q(2, x[11]) - q(4, x[11]));
+        dx[12] = (1 / initialValues[12]) * (f(69, x[0]) * f(70, x[1]) * f(71, x[2]) * f(72, x[3]) * f(73, x[4]) * f(74, x[5]) * f(75, x[6]) * f(76, x[7]) * q(2, x[12]) + (q(3, x[12]) + q(4, x[12]) + q(5, x[12]) + q(6, x[12])));
+        
+        for (let i = 0; i < 13; i++) {
+            if (isNaN(dx[i])) dx[i] = 0;
+            dx[i] = Math.min(5, Math.max(-5, dx[i]));
+        }
+        return dx;
+    }
+
+    function rungeKutta4(y0, t0, tf, n) {
+        let t = new Array(n);
+        let y = new Array(n);
+        let h = (tf - t0) / (n - 1);
+        t[0] = t0;
+        y[0] = y0.slice();
+        for (let step = 0; step < n - 1; step++) {
+            let k1 = system(y[step]);
+            let k2 = system(y[step].map((val, i) => val + h/2 * k1[i]));
+            let k3 = system(y[step].map((val, i) => val + h/2 * k2[i]));
+            let k4 = system(y[step].map((val, i) => val + h * k3[i]));
+            let nextY = new Array(13);
+            for (let i = 0; i < 13; i++) {
+                nextY[i] = y[step][i] + h/6 * (k1[i] + 2*k2[i] + 2*k3[i] + k4[i]);
+                if (isNaN(nextY[i])) nextY[i] = y[step][i];
+            }
+            y[step + 1] = nextY;
+            t[step + 1] = t[step] + h;
+        }
+        return {t, y};
+    }
+
+    // График с индивидуальной нормировкой каждой переменной
+    function drawGraph() {
+        collectData();
+        const canvas = document.getElementById('graphCanvas');
+        const ctx = canvas.getContext('2d');
+        const width = canvas.width;
+        const height = canvas.height;
+        const padding = 50;
+        
+        const result = rungeKutta4(initialValues, 0, 1, 100);
+        
+        let perVarMax = new Array(13).fill(0);
+        for (let v = 0; v < 13; v++) {
+            for (let i = 0; i < result.y.length; i++) {
+                perVarMax[v] = Math.max(perVarMax[v], result.y[i][v]);
+            }
+            if (perVarMax[v] === 0) perVarMax[v] = 1;
+        }
+        
+        ctx.fillStyle = 'white';
+        ctx.fillRect(0, 0, width, height);
+        
+        // Оси
+        ctx.beginPath();
+        ctx.moveTo(padding, padding);
+        ctx.lineTo(padding, height - padding);
+        ctx.lineTo(width - padding, height - padding);
+        ctx.stroke();
+        
+        ctx.fillStyle = 'black';
+        ctx.font = '12px Arial';
+        ctx.fillText('Время', width/2 - 20, height - 10);
+        ctx.save();
+        ctx.translate(15, height/2);
+        ctx.rotate(-Math.PI/2);
+        ctx.fillText('Нормированные значения (0-1)', -50, 0);
+        ctx.restore();
+        
+        // Сетка
+        for (let i = 0; i <= 5; i++) {
+            let x = padding + i * (width - 2*padding) / 5;
+            let y = height - padding - i * (height - 2*padding) / 5;
+            ctx.beginPath();
+            ctx.moveTo(x, padding);
+            ctx.lineTo(x, height - padding);
+            ctx.strokeStyle = '#ddd';
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(padding, y);
+            ctx.lineTo(width - padding, y);
+            ctx.stroke();
+            ctx.fillStyle = '#666';
+            ctx.fillText((i/5).toFixed(1), x - 10, height - padding + 15);
+            ctx.fillText((i/5).toFixed(1), padding - 25, y + 3);
+        }
+        
+        const colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf', '#f0a3ff', '#a0a0a0', '#ffd700'];
+        
+        for (let v = 0; v < 13; v++) {
+            ctx.beginPath();
+            ctx.strokeStyle = colors[v % colors.length];
+            ctx.lineWidth = 1.5;
+            let first = true;
+            for (let i = 0; i < result.t.length; i++) {
+                let x = padding + (result.t[i] / 1) * (width - 2*padding);
+                // let normValue = result.y[i][v] / perVarMax[v];
+                // Принудительное ограничение диапазона [0,1] для отображения внутри сетки
+                let normValue = result.y[i][v]
+                let clampedNorm = Math.min(1, Math.max(0, normValue));
+                let y = height - padding - clampedNorm * (height - 2*padding);
+                if (first) {
+                    ctx.moveTo(x, y);
+                    first = false;
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            }
+            ctx.stroke();
+        }
+        
+        // Легенда
+        ctx.font = '9px Arial';
+        let legendX = width - 155;
+        let legendY = padding + 5;
+        for (let i = 0; i < 13; i++) {
+            ctx.fillStyle = colors[i % colors.length];
+            ctx.fillRect(legendX, legendY + i * 16, 10, 10);
+            ctx.fillStyle = 'black';
+            let shortName = varNames[i].substring(0, 14);
+            ctx.fillText(shortName, legendX + 12, legendY + i * 16 + 9);
+        }
+        
+        ctx.fillStyle = '#333';
+        ctx.font = 'bold 14px Arial';
+        ctx.fillText('Динамика переменных (нормировано на собственный максимум)', width/2 - 230, 25);
+    }
+
+    // Полярная диаграмма с общим масштабом
+    function drawPolar() {
+        collectData();
+        const canvas = document.getElementById('polarCanvas');
+        const ctx = canvas.getContext('2d');
+        const width = canvas.width;
+        const height = canvas.height;
+        const centerX = width/2;
+        const centerY = height/2;
+        const radius = 200;
+        const result = rungeKutta4(initialValues, 0, 1, 100);
+        
+        let globalMax = 0;
+        for (let i = 0; i < result.y.length; i++) {
+            for (let j = 0; j < result.y[i].length; j++) {
+                globalMax = Math.max(globalMax, result.y[i][j]);
+            }
+        }
+        globalMax = globalMax === 0 ? 1 : globalMax;
+        
+        ctx.fillStyle = 'white';
+        ctx.fillRect(0, 0, width, height);
+        
+        for (let r = 0.2; r <= 1; r += 0.2) {
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius * r, 0, 2*Math.PI);
+            ctx.strokeStyle = '#ccc';
+            ctx.stroke();
+            ctx.fillStyle = '#666';
+            ctx.font = '9px Arial';
+            let value = (globalMax * r).toFixed(2);
+            ctx.fillText(value, centerX + radius * r - 12, centerY - 5);
+        }
+        
+        const angles = [];
+        for (let i = 0; i < 13; i++) {
+            angles.push(i * 2 * Math.PI / 13);
+        }
+        
+        const timePoints = [0, 25, 50, 75, 99];
+        const colors = ['blue', 'green', 'orange', 'red', 'purple'];
+        const labels = ['t=0', 't=0.25', 't=0.5', 't=0.75', 't=1.0'];
+        
+        for (let tpIdx = 0; tpIdx < timePoints.length; tpIdx++) {
+            const idx = timePoints[tpIdx];
+            const points = [];
+            for (let i = 0; i < 13; i++) {
+                let val = result.y[idx][i];
+                let scaledVal = val / globalMax;
+                let rVal = radius * Math.min(1, Math.max(0, scaledVal));
+                let x = centerX + rVal * Math.cos(angles[i] - Math.PI/2);
+                let y = centerY + rVal * Math.sin(angles[i] - Math.PI/2);
+                points.push({x, y});
+            }
+            ctx.beginPath();
+            ctx.moveTo(points[0].x, points[0].y);
+            for (let i = 1; i < points.length; i++) {
+                ctx.lineTo(points[i].x, points[i].y);
+            }
+            ctx.closePath();
+            ctx.strokeStyle = colors[tpIdx];
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+            ctx.fillStyle = colors[tpIdx] + '20';
+            ctx.fill();
+        }
+        
+        for (let i = 0; i < 13; i++) {
+            let labelX = centerX + (radius + 12) * Math.cos(angles[i] - Math.PI/2);
+            let labelY = centerY + (radius + 12) * Math.sin(angles[i] - Math.PI/2);
+            ctx.fillStyle = 'black';
+            ctx.font = '9px Arial';
+            ctx.fillText(`L${i+1}`, labelX - 6, labelY);
+        }
+        
+        ctx.fillStyle = '#333';
+        ctx.font = 'bold 12px Arial';
+        ctx.fillText('Полярная диаграмма', centerX - 65, 25);
+        
+        let legendX = width - 100;
+        let legendY = 60;
+        for (let i = 0; i < timePoints.length; i++) {
+            ctx.fillStyle = colors[i];
+            ctx.fillRect(legendX, legendY + i*18, 12, 12);
+            ctx.fillStyle = 'black';
+            ctx.font = '10px Arial';
+            ctx.fillText(labels[i], legendX + 15, legendY + i*18 + 10);
+        }
+    }
+
+    function renderUI() {
+        let html = '';
+        for (let i = 0; i < 13; i++) {
+            html += `<div class="param-row">
+                        <span>${varNames[i]}</span>
+                        <input type="number" id="val_${i}" value="${(0.43 + (i - 6) * 0.02).toFixed(3)}" step="0.01" min="0" max="1">
+                    </div>`;
+        }
+        document.getElementById('initial-values').innerHTML = html;
+        
+        html = '';
+        for (let i = 0; i < 13; i++) {
+            html += `<div class="param-row">
+                        <span>${varNames[i]}</span>
+                        <input type="number" id="lim_${i}" value="0.1" step="0.01" min="0" max="1">
+                    </div>`;
+        }
+        document.getElementById('limits').innerHTML = html;
+        
+        html = '';
+        for (let i = 0; i < 76; i++) {
+            let xIndex = fIndices[i];
+            html += `<div class="poly-row">
+                        <b>f${i+1}(x<sub>${xIndex}</sub>)</b> = 
+                        <input type="number" id="f_a_${i}" value="0" step="0.01" min="0" max="1" style="width:55px"> +
+                        <input type="number" id="f_b_${i}" value="0.27" step="0.01" min="0" max="1" style="width:55px">·x<sub>${xIndex}</sub> +
+                        <input type="number" id="f_c_${i}" value="0.27" step="0.01" min="0" max="1" style="width:55px">·x² +
+                        <input type="number" id="f_d_${i}" value="0.81" step="0.01" min="0" max="1" style="width:55px">·x³
+                    </div>`;
+        }
+        document.getElementById('polynomials').innerHTML = html;
+        
+        html = '';
+        for (let i = 0; i < 6; i++) {
+            html += `<div class="poly-row">
+                        <b>E${i+1}(x)</b> = 
+                        <input type="number" id="q_a_${i}" value="0" step="0.01" min="0" max="1" style="width:55px"> +
+                        <input type="number" id="q_b_${i}" value="0.27" step="0.01" min="0" max="1" style="width:55px">·x +
+                        <input type="number" id="q_c_${i}" value="0.27" step="0.01" min="0" max="1" style="width:55px">·x² +
+                        <input type="number" id="q_d_${i}" value="0.81" step="0.01" min="0" max="1" style="width:55px">·x³
+                    </div>`;
+        }
+        document.getElementById('perturbations').innerHTML = html;
+    }
+
+    document.getElementById('runBtn').onclick = () => {
+        document.getElementById('graphContainer').style.display = 'block';
+        document.getElementById('polarContainer').style.display = 'none';
+        drawGraph();
+    };
+    document.getElementById('polarBtn').onclick = () => {
+        document.getElementById('graphContainer').style.display = 'none';
+        document.getElementById('polarContainer').style.display = 'block';
+        drawPolar();
+    };
+    document.getElementById('randomBtn').onclick = () => {
+        generateRandomValues();
+        if (document.getElementById('graphContainer').style.display !== 'none') {
+            drawGraph();
+        } else {
+            drawPolar();
+        }
+    };
+    document.getElementById('resetBtn').onclick = () => {
+        location.reload();
+    };
+    
+    renderUI();
+    drawGraph();
+</script>
+</body>
+</html>
