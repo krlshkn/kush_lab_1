@@ -363,8 +363,8 @@ function renderUI() {
                     <b>f${i+1}(x<sub>${xIndex}</sub>)</b> = 
                     <input type="number" id="f_a_${i}" value="0" step="0.01" min="0" max="1" style="width:55px"> +
                     <input type="number" id="f_b_${i}" value="0.27" step="0.01" min="0" max="1" style="width:55px">·x<sub>${xIndex}</sub> +
-                    <input type="number" id="f_c_${i}" value="0.27" step="0.01" min="0" max="1" style="width:55px">·x² +
-                    <input type="number" id="f_d_${i}" value="0.81" step="0.01" min="0" max="1" style="width:55px">·x³
+                    <input type="number" id="f_c_${i}" value="0.27" step="0.01" min="0" max="1" style="width:55px">·x<sub>${xIndex}</sub>² +
+                    <input type="number" id="f_d_${i}" value="0.81" step="0.01" min="0" max="1" style="width:55px">·x<sub>${xIndex}</sub>³
                 </div>`;
     }
     document.getElementById('polynomials').innerHTML = html;
@@ -375,9 +375,9 @@ function renderUI() {
         html += `<div class="poly-row">
                     <b>q${i+1}(x)</b> = 
                     <input type="number" id="q_a_${i}" value="0" step="0.01" min="0" max="1" style="width:55px"> +
-                    <input type="number" id="q_b_${i}" value="0.27" step="0.01" min="0" max="1" style="width:55px">·x +
-                    <input type="number" id="q_c_${i}" value="0.27" step="0.01" min="0" max="1" style="width:55px">·x² +
-                    <input type="number" id="q_d_${i}" value="0.81" step="0.01" min="0" max="1" style="width:55px">·x³
+                    <input type="number" id="q_b_${i}" value="0.27" step="0.01" min="0" max="1" style="width:55px"> * sin(
+                    <input type="number" id="q_c_${i}" value="0.27" step="0.01" min="0" max="1" style="width:55px">·t +
+                    <input type="number" id="q_d_${i}" value="0.81" step="0.01" min="0" max="1" style="width:55px">)
                 </div>`;
     }
     document.getElementById('perturbations').innerHTML = html;
