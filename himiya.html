@@ -528,7 +528,7 @@
         for (let i = 0; i < 98; i++) {
             let xIndex = fIndices[i];
             html += `<div class="poly-row">
-                        <b>f${i+1}(x<sub>${xIndex}</sub>)</b> = 
+                        <b>f<sub>${i+1}</sub>(x<sub>${xIndex}</sub>)</b> = 
                         <input type="number" id="f_a_${i}" value="0" step="0.01" min="0" max="1" style="width:55px"> +
                         <input type="number" id="f_b_${i}" value="0.27" step="0.01" min="0" max="1" style="width:55px">·x<sub>${xIndex}</sub> +
                         <input type="number" id="f_c_${i}" value="0.27" step="0.01" min="0" max="1" style="width:55px">·x<sub>${xIndex}</sub>² +
@@ -540,7 +540,7 @@
         html = '';
         for (let i = 0; i < 5; i++) {
             html += `<div class="poly-row">
-                        <b>q${i+1}(x)</b> = 
+                        <b>q<sub>${i+1}</sub>(x)</b> = 
                         <input type="number" id="q_a_${i}" value="0" step="0.01" min="0" max="1" style="width:55px"> +
                         <input type="number" id="q_b_${i}" value="0.27" step="0.01" min="0" max="1" style="width:55px"> * sin(
                         <input type="number" id="q_c_${i}" value="0.27" step="0.01" min="0" max="1" style="width:55px">·t +
